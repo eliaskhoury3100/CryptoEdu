@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Lock, Unlock } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 export default function PlayfairCipher() {
   const [plaintext, setPlaintext] = useState("")
@@ -16,7 +17,19 @@ export default function PlayfairCipher() {
   const [activeTab, setActiveTab] = useState("encrypt")
   const [stepByStep, setStepByStep] = useState<string[]>([])
   const [preparedText, setPreparedText] = useState("")
-
+  const [userId, setUserId] = useState<number | null>(null); // User ID state
+  const router = useRouter();
+  // Fetch the userId dynamically from localStorage when the component is mounted
+  useEffect(() => {
+    const userJson = localStorage.getItem("user");
+    if (userJson) {
+      const user = JSON.parse(userJson);
+      if (user?.id) setUserId(user.id);  // Store user ID
+      else router.push("/login");   // Redirect if no user is logged in
+    } else {
+      router.push("/login");
+    }
+  }, []);
   // Generate the 5x5 key matrix whenever the key changes
   useEffect(() => {
     if (key) {
@@ -150,7 +163,7 @@ export default function PlayfairCipher() {
         method: 'POST',
         headers: {'Content-Type':'application/json'},
         body: JSON.stringify({
-          user_id: 1,
+          user_id: userId,
           cipher_type: 'playfair',
           plaintext,
           encrypted_text: cipher,
@@ -201,7 +214,7 @@ export default function PlayfairCipher() {
         method: 'POST',
         headers: {'Content-Type':'application/json'},
         body: JSON.stringify({
-          user_id: 1,
+          user_id: userId,
           cipher_type: 'playfair',
           plaintext: ciphertext,
           encrypted_text: plain,

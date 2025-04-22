@@ -1,12 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Lock, Unlock } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 export default function VigenereCipher() {
   const [plaintext, setPlaintext] = useState("")
@@ -15,7 +16,19 @@ export default function VigenereCipher() {
   const [activeTab, setActiveTab] = useState("encrypt")
   const [stepByStep, setStepByStep] = useState<string[]>([])
   const [keyStream, setKeyStream] = useState("")
-
+const [userId, setUserId] = useState<number | null>(null); // User ID state
+const router = useRouter();
+// Fetch the userId dynamically from localStorage when the component is mounted
+useEffect(() => {
+  const userJson = localStorage.getItem("user");
+  if (userJson) {
+    const user = JSON.parse(userJson);
+    if (user?.id) setUserId(user.id);  // Store user ID
+    else router.push("/login");   // Redirect if no user is logged in
+  } else {
+    router.push("/login");
+  }
+}, []);
   // Generate key stream (repeated key to match plaintext length)
   const generateKeyStream = (text: string, key: string) => {
     if (!key) return ""
@@ -81,7 +94,7 @@ export default function VigenereCipher() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            user_id: 1,
+            user_id: userId,
             cipher_type: 'vigenere',
             plaintext,
             encrypted_text: cipher,
@@ -134,7 +147,7 @@ export default function VigenereCipher() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          user_id: 1,
+          user_id: userId,
           cipher_type: 'vigenere',
           plaintext: ciphertext,
           encrypted_text: plain,

@@ -1,4 +1,3 @@
-// app/history/page.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -38,23 +37,32 @@ export default function HistoryPage() {
   // --- State ---
   const [user, setUser] = useState<User | null>(null);
   const [history, setHistory] = useState<HistoryItem[]>([]);
-  const [activeTab, setActiveTab] = useState< string >("all");
+  const [activeTab, setActiveTab] = useState<string>("all");
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(true); // Loading state to handle async user fetching
 
   // --- Load user & fetch history ---
   useEffect(() => {
+    // Check if user is logged in and retrieve user data from localStorage
     const stored = localStorage.getItem("user");
+
     if (!stored) {
-      router.push("/login");
+      setLoading(false);  // Stop loading if no user is found
+      router.push("/login");  // Redirect to login if no user found in localStorage
       return;
     }
+
     const u: User = JSON.parse(stored);
     if (!u?.id) {
+      setLoading(false);  // Stop loading and redirect if the user ID is invalid
       router.push("/login");
       return;
     }
-    setUser(u);
 
+    setUser(u);  // Set the user state if valid
+    setLoading(false);  // Stop loading once user is loaded
+
+    // Fetch user history
     fetch(`/api/history?userId=${u.id}`)
       .then((res) => {
         if (!res.ok) throw new Error(`Fetch error: ${res.status}`);
@@ -70,8 +78,9 @@ export default function HistoryPage() {
 
   // --- Logout ---
   const handleLogout = () => {
-    localStorage.removeItem("user");
-    router.push("/login");
+    localStorage.removeItem("user");  // Remove user from localStorage
+    setUser(null);  // Immediately update the state to null
+    router.push("/login");  // Redirect to login page
   };
 
   // --- Delete single history item ---
@@ -85,7 +94,7 @@ export default function HistoryPage() {
         console.error("Delete failed:", await res.text());
         return;
       }
-      setHistory((h) => h.filter((item) => item.id !== id));
+      setHistory((h) => h.filter((item) => item.id !== id));  // Remove deleted item from history state
     } catch (e) {
       console.error(e);
     }
@@ -97,14 +106,14 @@ export default function HistoryPage() {
     if (!confirm("Clear your entire history?")) return;
     try {
       const res = await fetch(
-               `/api/history?all=true&user_id=${user.id}`,   // <-- make sure this is exactly "user_id"
-                 { method: "DELETE" }
-               );
+        `/api/history?all=true&user_id=${user.id}`,
+        { method: "DELETE" }
+      );
       if (!res.ok) {
         console.error("Clear failed:", await res.text());
         return;
       }
-      setHistory([]);
+      setHistory([]);  // Clear history state after successful deletion
     } catch (e) {
       console.error(e);
     }
@@ -120,7 +129,7 @@ export default function HistoryPage() {
     new Date(ts).toLocaleString();
 
   // --- Loading / error states ---
-  if (!user) {
+  if (loading) {
     return <div className="container mx-auto p-8 text-center">Loading…</div>;
   }
   if (error) {
@@ -143,28 +152,18 @@ export default function HistoryPage() {
             View and manage your previous operations
           </p>
         </div>
-        <div className="mt-4 md:mt-0 flex flex-col md:flex-row items-start md:items-center gap-4">
-          <div className="bg-blue-50 p-3 rounded-md">
-            Logged in as{" "}
-            <span className="font-bold">{user.name || user.email}</span>
-          </div>
-          <Button
-            variant="outline"
-            onClick={handleLogout}
-            className="border-red-300 text-red-600 hover:bg-red-50"
-          >
+
+        {/* Logout Button */}
+        {user && (
+          <Button variant="outline" onClick={handleLogout}>
             <LogOut className="mr-2 h-4 w-4" /> Logout
           </Button>
-        </div>
+        )}
       </div>
 
       {/* Tabs + Clear */}
       <div className="mb-6">
-        <Tabs
-          value={activeTab}
-          onValueChange={setActiveTab}
-          className="w-full"
-        >
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <div className="flex justify-between items-center">
             <TabsList>
               <TabsTrigger value="all">All</TabsTrigger>

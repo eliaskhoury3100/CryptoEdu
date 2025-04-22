@@ -8,11 +8,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Calculator } from "lucide-react"
 import { useRouter } from "next/navigation"
 
-// Helper function to get userId dynamically from localStorage
-const getUserId = () => {
-  const storedUserId = localStorage.getItem("userId");
-  return storedUserId ? parseInt(storedUserId, 10) : 1;  // Default to 1 if not found
-}
 
 export default function ExtendedEuclid() {
   const [a, setA] = useState("")
@@ -20,14 +15,20 @@ export default function ExtendedEuclid() {
   const [result, setResult] = useState<number | null>(null)
   const [steps, setSteps] = useState<string[]>([])
   const [error, setError] = useState("")
-  const [userId, setUserId] = useState<number>(1)  // Default userId state
   const [loading, setLoading] = useState(false)
   const router = useRouter();
+  const [userId, setUserId] = useState<number | null>(null); // User ID state
 
   // Fetch the userId dynamically from localStorage when the component is mounted
   useEffect(() => {
-    const dynamicUserId = getUserId();  // Get userId from localStorage or context
-    setUserId(dynamicUserId);  // Set userId state
+    const userJson = localStorage.getItem("user");
+    if (userJson) {
+      const user = JSON.parse(userJson);
+      if (user?.id) setUserId(user.id);  // Store user ID
+      else router.push("/login");   // Redirect if no user is logged in
+    } else {
+      router.push("/login");
+    }
   }, []);
 
   const calculateInverse = async () => {

@@ -11,11 +11,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Lock, Unlock } from "lucide-react"
 import { useRouter } from "next/navigation"
 
-// Helper function to get userId dynamically from localStorage
-const getUserId = () => {
-  const storedUserId = localStorage.getItem("userId");
-  return storedUserId ? parseInt(storedUserId, 10) : 1;  // Default to 1 if not found
-}
+
 
 export default function HillCipher() {
   const [plaintext, setPlaintext] = useState("")
@@ -30,13 +26,20 @@ export default function HillCipher() {
   const [isValidMatrix, setIsValidMatrix] = useState(true)
   const [activeTab, setActiveTab] = useState("encrypt")
   const [stepByStep, setStepByStep] = useState<string[]>([])
-  const [userId, setUserId] = useState<number>(1)  // Default userId state
   const router = useRouter();
+
+  const [userId, setUserId] = useState<number | null>(null); // User ID state
 
   // Fetch the userId dynamically from localStorage when the component is mounted
   useEffect(() => {
-    const dynamicUserId = getUserId();  // Get userId from localStorage or context
-    setUserId(dynamicUserId);  // Set userId state
+    const userJson = localStorage.getItem("user");
+    if (userJson) {
+      const user = JSON.parse(userJson);
+      if (user?.id) setUserId(user.id);  // Store user ID
+      else router.push("/login");   // Redirect if no user is logged in
+    } else {
+     router.push("/login");
+    }
   }, []);
 
   // Update key matrix when size changes

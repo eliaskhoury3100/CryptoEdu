@@ -119,11 +119,11 @@ export default function Home() {
       </div>
 
       <div className="mt-12 flex flex-col md:flex-row gap-6 justify-center">
-        <Link href="/login">
+        {/* <Link href="/login">
           <Button className="w-full md:w-auto bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600">
             <User className="mr-2 h-4 w-4" /> Login / Register
           </Button>
-        </Link>
+        </Link> */}
         <Link href="/history">
           <Button
             variant="outline"

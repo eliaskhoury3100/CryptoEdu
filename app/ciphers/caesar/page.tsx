@@ -10,11 +10,6 @@ import { Slider } from "@/components/ui/slider"
 import { Lock, Unlock, RefreshCw } from "lucide-react"
 import { useRouter } from "next/navigation"
 
-// Helper function to get userId dynamically from localStorage
-const getUserId = () => {
-  const storedUserId = localStorage.getItem("userId");
-  return storedUserId ? parseInt(storedUserId, 10) : 1;  // Default to 1 if not found
-}
 
 export default function CaesarCipher() {
   const [plaintext, setPlaintext] = useState("")
@@ -23,13 +18,19 @@ export default function CaesarCipher() {
   const [activeTab, setActiveTab] = useState("encrypt")
   const [stepByStep, setStepByStep] = useState<string[]>([])
   const [allShifts, setAllShifts] = useState<{ shift: number; text: string }[]>([])
-  const [userId, setUserId] = useState<number>(1)  // Default userId state
-
+  const [userId, setUserId] = useState<number | null>(null); // User ID state
+  const router = useRouter();
   // Fetch the userId dynamically from localStorage when the component is mounted
   useEffect(() => {
-    const dynamicUserId = getUserId();  // Get userId from localStorage or context
-    setUserId(dynamicUserId);  // Set userId state
-  }, [])
+    const userJson = localStorage.getItem("user");
+    if (userJson) {
+      const user = JSON.parse(userJson);
+      if (user?.id) setUserId(user.id);  // Store user ID
+      else router.push("/login");   // Redirect if no user is logged in
+    } else {
+      router.push("/login");
+    }
+  }, []);
 
   // Handle direct input for shift value
   const handleShiftInput = (value: string) => {

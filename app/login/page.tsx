@@ -1,39 +1,43 @@
 "use client";
 
-import type React from "react"
-
-import { useState } from "react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Eye, EyeOff, LogIn, UserPlus } from "lucide-react"
-
+import type React from "react";
+import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Eye, EyeOff, LogIn, UserPlus } from "lucide-react";
 
 export default function LoginPage() {
-  const router = useRouter()
-  const [activeTab, setActiveTab] = useState("login")
-  const [showPassword, setShowPassword] = useState(false)
+  const router = useRouter();
+  const [activeTab, setActiveTab] = useState("login");
+  const [showPassword, setShowPassword] = useState(false);
 
   // Login form state
-  const [loginEmail, setLoginEmail] = useState("")
-  const [loginPassword, setLoginPassword] = useState("")
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
 
   // Register form state
-  const [registerName, setRegisterName] = useState("")
-  const [registerEmail, setRegisterEmail] = useState("")
-  const [registerPassword, setRegisterPassword] = useState("")
-  const [confirmPassword, setConfirmPassword] = useState("")
-  const [error, setError] = useState<string | null>(null)
+  const [registerName, setRegisterName] = useState("");
+  const [registerEmail, setRegisterEmail] = useState("");
+  const [registerPassword, setRegisterPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
+  // Password validation function
+  const validatePassword = (password: string): boolean => {
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+    return passwordRegex.test(password);
+  };
 
+  // Handle login form submission
   const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     console.log("Login attempt:", { loginEmail, loginPassword });
-    setError(null)
+    setError(null);
 
     const res = await fetch("/api/auth/login", {
       method: "POST",
@@ -42,27 +46,33 @@ export default function LoginPage() {
         email: loginEmail,
         password: loginPassword,
       }),
-    })
+    });
 
     if (res.ok) {
-      const user = await res.json() // { id, name?, email }
-      localStorage.setItem("user", JSON.stringify(user))
-      router.push("/history")
+      const user = await res.json(); // { id, name?, email }
+      localStorage.setItem("user", JSON.stringify(user));
+      router.push("/history");
     } else {
-      const { error: msg } = await res.json()
-      setError(msg || "Login failed")
+      const { error: msg } = await res.json();
+      setError(msg || "Login failed");
     }
-  }
+  };
 
-
-
+  // Handle registration form submission
   const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError(null)
+    e.preventDefault();
+    setError(null);
 
+    // Validate passwords
     if (registerPassword !== confirmPassword) {
-      setError("Passwords do not match")
-      return
+      setError("Passwords do not match");
+      return;
+    }
+
+    // Validate password strength
+    if (!validatePassword(registerPassword)) {
+      setError("Password must contain at least one uppercase letter, one lowercase letter, one number, and be at least 8 characters long.");
+      return;
     }
 
     const res = await fetch("/api/auth/register", {
@@ -73,22 +83,21 @@ export default function LoginPage() {
         email: registerEmail,
         password: registerPassword,
       }),
-    })
+    });
 
     if (res.ok) {
-     router.push("/login")
-     // registration succeeded → switch back to the login tab:
-     setActiveTab("login")
-     // (optionally clear the register form)
-     setRegisterName("")
-     setRegisterEmail("")
-     setRegisterPassword("")
-     setConfirmPassword("")
+      router.push("/login");
+      setActiveTab("login");
+      setRegisterName("");
+      setRegisterEmail("");
+      setRegisterPassword("");
+      setConfirmPassword("");
     } else {
-      const { error: msg } = await res.json()
-      setError(msg || "Registration failed")
+      const { error: msg } = await res.json();
+      setError(msg || "Registration failed");
     }
-  }
+  };
+
   return (
     <div className="container mx-auto px-4 py-12 flex items-center justify-center min-h-[calc(100vh-4rem)]">
       <Card className="w-full max-w-md">
@@ -220,6 +229,7 @@ export default function LoginPage() {
                     onChange={(e) => setConfirmPassword(e.target.value)}
                   />
                 </div>
+                {error && <div className="text-red-500 text-sm mt-2">{error}</div>} {/* Display the error here */}
               </CardContent>
               <CardFooter className="flex flex-col">
                 <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">
@@ -231,6 +241,5 @@ export default function LoginPage() {
         </Tabs>
       </Card>
     </div>
-  )
+  );
 }
-

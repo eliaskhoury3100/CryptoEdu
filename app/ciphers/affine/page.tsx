@@ -25,16 +25,17 @@ export default function AffineCipher() {
   const [activeTab, setActiveTab] = useState("encrypt");
   const [stepByStep, setStepByStep] = useState<string[]>([]);
   const [userId, setUserId] = useState<number | null>(null); // User ID state
-
+  const router = useRouter();
+  
   // Fetch user ID from localStorage
   useEffect(() => {
     const userJson = localStorage.getItem("user");
     if (userJson) {
       const user = JSON.parse(userJson);
       if (user?.id) setUserId(user.id);  // Store user ID
-      else useRouter().push("/login");   // Redirect if no user is logged in
+      else router.push("/login");   // Redirect if no user is logged in
     } else {
-      useRouter().push("/login");
+      router.push("/login");
     }
   }, []);
 
